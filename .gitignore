@@ -1,0 +1,30 @@
+# Python
+__pycache__/
+*.py[cod]
+*.egg-info/
+.venv/
+venv/
+
+# Django
+*.log
+db.sqlite3
+/media/
+/staticfiles/
+
+# Environment — never commit real secrets
+.env
+.env.*
+!.env.example
+
+# Coverage
+.coverage
+htmlcov/
+
+# Editors / OS
+.vscode/
+.idea/
+.DS_Store
+Thumbs.db
+
+# Windows msys crash dumps
+*.stackdump
