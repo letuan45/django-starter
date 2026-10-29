@@ -5,9 +5,9 @@
 > Update it and commit it at the end of every session.
 
 **Last session:** 2026-10-29
-**Current phase:** Phase 1 — Models and migrations
-**Resume from:** Phase 0 is done. Phase 1 starts with `docker compose down -v`
-(see the Phase 1 open question below), then `startapp accounts`.
+**Current phase:** Phase 2 — The ORM (not started; waiting for the owner's go-ahead)
+**Resume from:** Phase 1 is done. Phase 2 begins with a `seed_data` management
+command, then roughly fifteen queries explored in `manage.py shell`.
 
 Curriculum: [`LEARNING-PLAN.md`](./LEARNING-PLAN.md)
 
@@ -58,32 +58,59 @@ Curriculum: [`LEARNING-PLAN.md`](./LEARNING-PLAN.md)
 
 ## Phase 1 — Models and migrations
 
-**Status:** not started
+**Status:** done — 2026-10-29
 
 ### Concepts
 
-- [ ] Field types and when to use which
-- [ ] `null` vs `blank` — the difference and why both exist
-- [ ] `choices` and the generated `get_FOO_display()`
-- [ ] `__str__` and where Django uses it
-- [ ] `class Meta`: `ordering`, `indexes`, `constraints`, `db_table`
-- [ ] `ForeignKey` and `on_delete` options
-- [ ] `ManyToManyField` and the implicit through table
-- [ ] Custom user model and `AUTH_USER_MODEL` — why it must come first
-- [ ] Migration lifecycle: `makemigrations` -> `migrate` -> `showmigrations`
-- [ ] Reading a migration file and its `sqlmigrate` output
+- [x] Field types and when to use which
+- [x] `null` vs `blank` — the difference and why both exist
+- [~] `choices` and the generated `get_FOO_display()`
+- [~] `__str__` and where Django uses it
+- [~] `class Meta`: `ordering`, `indexes`, `constraints`, `db_table`
+- [x] `ForeignKey` and `on_delete` options
+- [x] `ManyToManyField` and the implicit through table
+- [x] `OneToOneField` — and how it differs from a unique `ForeignKey`
+- [x] Abstract base classes — inherited columns without an inherited table
+- [x] Custom user model and `AUTH_USER_MODEL` — why it must come first
+- [x] Migration lifecycle: `makemigrations` -> `migrate` -> `showmigrations`
+- [x] Reading a migration file and its `sqlmigrate` output
 
 ### Done when
 
-- [ ] `accounts.User` is the active user model, set before the first migrate
-- [ ] `Author`, `Category`, `Book` tables exist in Postgres
-- [ ] Owner can read a generated migration and explain each SQL statement
+- [x] `accounts.User` is the active user model, set before the first migrate
+- [x] `accounts.Member` exists, one-to-one with `User`
+- [x] `Author`, `Category`, `Book` tables exist in Postgres
+- [x] Every table that inherits `TimeStampedModel` carries `created_at` /
+      `updated_at`. `accounts_user` does not, and must not — `AbstractUser`
+      already supplies `date_joined`.
+- [x] Owner can read a generated migration and explain each SQL statement
 
 ### Open questions
 
-- _(none yet)_
+- `[~] get_FOO_display()` — Django generates it at import time, but Pylance
+  reads statically and cannot see it. `Member.__str__` therefore calls
+  `Status(self.status).label` instead, which is equivalent for valid data and
+  raises `ValueError` for invalid data (where `get_status_display()` would
+  return it unchanged). The method has never actually been called; try it in
+  the Phase 2 shell.
+- `[~] __str__` — written for all four models, but not yet seen rendering
+  anywhere. Phase 2's shell and Phase 3's admin are where it shows up.
+- `[~] class Meta` — `ordering`, `indexes` and `constraints` are all used and
+  were read in `sqlmigrate`. `db_table` has never been used: every table took
+  Django's default `<app>_<model>` name, as DATA-MODEL.md specifies.
+- `showmigrations` has not been run yet, only `makemigrations` and `migrate`.
+  Worth running once at the start of Phase 2 to see the applied/unapplied list.
+- **Type checking is unresolved, not decided.** Pylance was kept and the code
+  was written to suit it. When Phase 2 introduces `Model.objects`, the same
+  false positives may return; the alternative (mypy + `django-stubs`, which
+  needs Django installed on the host) is still open.
+- **CRLF is unguarded.** Git reported `LF will be replaced by CRLF` for
+  `Dockerfile` and friends at the Phase 0 commit. Harmless today because the
+  files on disk were written with LF, but a fresh clone on Windows would check
+  them out with CRLF, and Linux containers choke on ``. A `.gitattributes`
+  forcing LF would close this; not added yet.
 
-**Commit:** —
+**Commit:** `feat(phase-1): custom user model, Member, and the catalog schema`
 
 ---
 
@@ -311,3 +338,4 @@ Curriculum: [`LEARNING-PLAN.md`](./LEARNING-PLAN.md)
 | 2026-10-26 | — | Plan approved. `CLAUDE.md`, `LEARNING-PLAN.md`, `PROGRESS.md` created. |
 | 2026-10-27 | — | `ARCHITECTURE.md`, `BUSINESS-RULES.md`, `DATA-MODEL.md` written. |
 | 2026-10-29 | 0 | Docker environment built: `Dockerfile`, `docker-compose.yml`, `requirements.txt`, `.env`. `startproject config .` run, `settings.py` moved onto env vars + PostgreSQL. Three healthy containers, `migrate` green, welcome page served. |
+| 2026-10-29 | 1 | Database wiped with `down -v` before the first real migrate. `common.TimeStampedModel`, `accounts.User` + `Member`, `catalog.Author` / `Category` / `Book`. `AUTH_USER_MODEL` set before migrating. `sqlmigrate` read line by line for both apps. Found and fixed a contradiction in DATA-MODEL.md: audit columns are not on `accounts_user`. |

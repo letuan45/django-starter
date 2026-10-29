@@ -107,16 +107,22 @@ Why this boundary, and not "fat models":
 
 Each app owns one concept. Apps appear as their phase lands.
 
-| App | Owns | Introduced |
+| Package | Owns | Introduced |
 |---|---|---|
 | `config` | settings, root URLconf, WSGI/ASGI entrypoints | Phase 0 |
+| `common` | abstract base models only — **not** a Django app | Phase 1 |
 | `accounts` | the custom `User` model, `Member` profile | Phase 1 |
 | `catalog` | `Author`, `Category`, `Book` — the things a library holds | Phase 1 |
 | `circulation` | `Loan` — the act of borrowing and returning | Phase 8 |
 | `activity` | the MongoDB-backed event log | Phase 9 |
 
+`common` is the one entry that is not an app and is not in `INSTALLED_APPS`. It holds
+`TimeStampedModel` and nothing else: abstract models own no tables, so there is nothing
+for Django to migrate. See [`DATA-MODEL.md`](./DATA-MODEL.md).
+
 **Dependency direction:** `activity` <- `circulation` -> `catalog` -> `accounts`.
-No cycles. `catalog` never imports from `circulation`.
+No cycles. `catalog` never imports from `circulation`. Every app may import `common`;
+`common` imports none of them.
 
 ---
 

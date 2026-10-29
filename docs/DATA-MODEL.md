@@ -16,7 +16,7 @@ These apply to every table unless stated otherwise.
 | Decision | Choice | Why |
 |---|---|---|
 | Primary key | `BigAutoField` (`id`) | Django's default. Short URLs (`/books/42/`), small indexes, readable while debugging. |
-| Audit columns | `created_at`, `updated_at` on every table, via an abstract base | One definition, no repetition. Invaluable when debugging "when did this change?". |
+| Audit columns | `created_at`, `updated_at` via an abstract base, on every table **except `accounts_user`** | One definition, no repetition. Invaluable when debugging "when did this change?". `accounts_user` is the exception: `AbstractUser` already supplies `date_joined` and `last_login`, and a second creation timestamp would be two columns meaning one thing. |
 | Deletion | Hard delete, blocked by `on_delete=PROTECT` | The database refuses to delete a row that is still referenced. No soft-delete flag to forget in a filter. |
 | Timestamps | `DateTimeField`, stored in UTC (`USE_TZ = True`) | `due_date` is the one exception — see `circulation_loan`. |
 | Table names | Django default: `<app>_<model>` | No reason to fight the convention. |
@@ -32,6 +32,17 @@ TimeStampedModel            (abstract — creates no table)
 `abstract = True` in `Meta` means Django creates no table for it; the columns are copied
 into each concrete subclass. See
 [Abstract base classes](https://docs.djangoproject.com/en/6.1/topics/db/models/#abstract-base-classes).
+
+**Where it lives:** `common/models.py`.
+
+`common` is a plain Python package — deliberately **not** a Django app, and **not** listed
+in `INSTALLED_APPS`. It defines only abstract models, so it owns no tables and needs no
+migrations; registering it as an app would advertise a table surface it does not have.
+Django exempts abstract models from the app requirement: in `django/db/models/base.py`
+the `RuntimeError` for a model outside `INSTALLED_APPS` is guarded by `if not abstract`.
+
+The day `common` needs a concrete model or a management command, it becomes a real app.
+Until then it is shared base classes and nothing more.
 
 > `auto_now` only fires on `Model.save()`. A `QuerySet.update()` bypasses it. That
 > surprise will come up in Phase 8.

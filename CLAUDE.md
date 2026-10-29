@@ -54,7 +54,8 @@ stopping point, add anything shaky to "Open questions") and commit it.
 ```
 django-starter/
 ├── config/              Django project package (settings, root urls, wsgi/asgi)
-├── accounts/            Custom User model — created in Phase 1, before the first migrate
+├── common/              Abstract base models only (TimeStampedModel). NOT an installed app
+├── accounts/            Custom User model + Member — Phase 1, before the first migrate
 ├── catalog/             Author, Category, Book — the core CRUD domain
 ├── circulation/         Loan / borrow / return business logic (Phase 8)
 ├── activity/            MongoDB-backed activity log (Phase 9)

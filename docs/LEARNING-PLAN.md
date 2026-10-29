@@ -78,8 +78,12 @@ connects Django to Postgres, reading configuration from the environment.
 [Field reference](https://docs.djangoproject.com/en/6.1/ref/models/fields/) ·
 [Migrations](https://docs.djangoproject.com/en/6.1/topics/migrations/)
 
-**Build:** `accounts.User(AbstractUser)` plus `AUTH_USER_MODEL`, then the `catalog` app
-with `Author`, `Category`, `Book`.
+**Build:** `common/models.py` with the `TimeStampedModel` abstract base, then
+`accounts.User(AbstractUser)` plus `AUTH_USER_MODEL` and `accounts.Member`, then the
+`catalog` app with `Author`, `Category`, `Book`.
+
+`Member` is built here rather than in Phase 8 because it is the only `OneToOneField` in
+the schema, and because `accounts` owns it per [`ARCHITECTURE.md`](./ARCHITECTURE.md).
 
 > **Critical ordering:** the custom user model must exist and `AUTH_USER_MODEL` must be
 > set **before the first `migrate` of this phase**. Swapping it later is extremely painful.

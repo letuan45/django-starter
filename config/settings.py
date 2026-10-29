@@ -81,12 +81,21 @@ ALLOWED_HOSTS = env_list('DJANGO_ALLOWED_HOSTS')
 # Application definition
 
 INSTALLED_APPS = [
+    # Django's own apps.
     'django.contrib.admin',
     'django.contrib.auth',
     'django.contrib.contenttypes',
     'django.contrib.sessions',
     'django.contrib.messages',
     'django.contrib.staticfiles',
+
+    # This project's apps. A model is invisible to Django -- including to
+    # makemigrations -- unless its app is listed here.
+    #
+    # `common` is absent on purpose: it holds only abstract models, so it
+    # owns no tables and has nothing to migrate.
+    'accounts',
+    'catalog',
 ]
 
 MIDDLEWARE = [
@@ -158,6 +167,18 @@ AUTH_PASSWORD_VALIDATORS = [
         'NAME': 'django.contrib.auth.password_validation.NumericPasswordValidator',
     },
 ]
+
+# Replace Django's stock auth.User with this project's own model.
+# https://docs.djangoproject.com/en/6.1/topics/auth/customizing/#substituting-a-custom-user-model
+#
+# THIS MUST BE SET BEFORE THE FIRST migrate. Once any migration has been
+# applied, Django refuses to swap the user model and the only practical cure
+# is to throw the database away. That is why a phase about models has to
+# touch authentication, which is otherwise not taught until Phase 6.
+#
+# The value is '<app_label>.<ModelName>' -- a label, not an import path.
+# 'accounts.models.User' would be wrong.
+AUTH_USER_MODEL = 'accounts.User'
 
 
 # Internationalization
