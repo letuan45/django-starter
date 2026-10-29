@@ -1,0 +1,10 @@
+# Versions are pinned exactly, not with ranges.
+# A rebuild six months from now must install the same bytes it installs today;
+# an upgrade is a deliberate edit of this file, never a surprise from `docker build`.
+
+Django==6.1.2
+
+# psycopg 3 is the PostgreSQL driver Django 6.x prefers (psycopg2 is legacy).
+# The [binary] extra pulls a prebuilt wheel, so the image needs no C compiler
+# and no libpq-dev. Swap to plain `psycopg` only if a wheel is unavailable.
+psycopg[binary]==3.3.6

@@ -1,0 +1,76 @@
+# No `version:` key. It was required by Compose v1 and is ignored — with a
+# warning — by Compose v2+. This project runs Compose v5.
+
+services:
+
+  # ---------------------------------------------------------------- db ----
+  db:
+    image: postgres:17
+    environment:
+      # ${...} here is substituted by COMPOSE, reading the .env file in this
+      # directory, while the YAML is being parsed. See the note under `web`.
+      POSTGRES_DB: ${POSTGRES_DB}
+      POSTGRES_USER: ${POSTGRES_USER}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+    volumes:
+      # A NAMED volume, not a bind mount. Managed by Docker, survives
+      # `docker compose down`, and is destroyed only by `down -v`.
+      - pgdata:/var/lib/postgresql/data
+    ports:
+      # host:container. Only needed to reach Postgres from a GUI tool on the
+      # host — `web` does not use it. If port 5432 is already taken on your
+      # machine, change the LEFT number only: "5433:5432".
+      - "5432:5432"
+    healthcheck:
+      # $$ escapes the $ so Compose leaves it alone and the shell INSIDE the
+      # container expands it. A single $ would be substituted by Compose and
+      # the variable would arrive empty.
+      test: ["CMD-SHELL", "pg_isready -U $${POSTGRES_USER} -d $${POSTGRES_DB}"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+      start_period: 10s
+
+  # ------------------------------------------------------------- mongo ----
+  mongo:
+    image: mongo:8
+    volumes:
+      - mongodata:/data/db
+    ports:
+      - "27017:27017"
+    healthcheck:
+      test: ["CMD", "mongosh", "--quiet", "--eval", "db.adminCommand('ping')"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+      start_period: 10s
+
+  # --------------------------------------------------------------- web ----
+  web:
+    build: .
+    env_file:
+      # A DIFFERENT mechanism from ${...} above: this injects the file's
+      # variables into the container's environment, for os.environ to read.
+      # Same file, two unrelated jobs.
+      - .env
+    volumes:
+      # The bind mount that makes this a development setup: the host project
+      # directory is mounted over /app, shadowing whatever the image holds.
+      # Edit a file on Windows, runserver reloads inside the container.
+      - .:/app
+    ports:
+      - "8000:8000"
+    depends_on:
+      # NOT the short `depends_on: [db, mongo]` form. That waits only for the
+      # container to START. Postgres takes several seconds after starting
+      # before it accepts connections, so plain depends_on lets Django boot
+      # into a connection error. `service_healthy` waits for the healthcheck
+      # above to pass.
+      db:
+        condition: service_healthy
+      mongo:
+        condition: service_healthy
+
+volumes:
+  pgdata:
+  mongodata:

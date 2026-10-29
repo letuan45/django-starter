@@ -4,9 +4,10 @@
 > where we stopped, which concepts are solid, and which ones are still shaky.
 > Update it and commit it at the end of every session.
 
-**Last session:** — (not started yet)
-**Current phase:** Phase 0 — Docker-first environment
-**Resume from:** nothing built yet; start with `Dockerfile` and `docker-compose.yml`
+**Last session:** 2026-10-29
+**Current phase:** Phase 1 — Models and migrations
+**Resume from:** Phase 0 is done. Phase 1 starts with `docker compose down -v`
+(see the Phase 1 open question below), then `startapp accounts`.
 
 Curriculum: [`LEARNING-PLAN.md`](./LEARNING-PLAN.md)
 
@@ -20,30 +21,38 @@ Curriculum: [`LEARNING-PLAN.md`](./LEARNING-PLAN.md)
 
 ## Phase 0 — Docker-first environment
 
-**Status:** not started
+**Status:** done — 2026-10-29
 
 ### Concepts
 
-- [ ] Project vs app — what each one is and why Django separates them
-- [ ] What `manage.py` actually does when invoked
-- [ ] `settings.py` — how Django finds it, and why it must not hold secrets
-- [ ] `DATABASES` — how Django connects to Postgres
-- [ ] Reading configuration from environment variables
-- [ ] Docker: image vs container vs volume
-- [ ] Compose: `depends_on` vs `healthcheck` — why `depends_on` alone is not enough
+- [x] Project vs app — what each one is and why Django separates them
+- [x] What `manage.py` actually does when invoked
+- [x] `settings.py` — how Django finds it, and why it must not hold secrets
+- [x] `DATABASES` — how Django connects to Postgres
+- [x] Reading configuration from environment variables
+- [~] Docker: image vs container vs volume
+- [x] Compose: `depends_on` vs `healthcheck` — why `depends_on` alone is not enough
 
 ### Done when
 
-- [ ] `docker compose up -d` brings up three healthy containers
-- [ ] `docker compose exec web python manage.py migrate` succeeds against Postgres
-- [ ] `psql` shows the `django_migrations` table
-- [ ] `http://localhost:8000` serves the Django welcome page
+- [x] `docker compose up -d` brings up three healthy containers
+- [x] `docker compose exec web python manage.py migrate` succeeds against Postgres
+- [x] `psql` shows the `django_migrations` table
+- [x] `http://localhost:8000` serves the Django welcome page
 
 ### Open questions
 
-- _(none yet)_
+- **Phase 1 must begin with `docker compose down -v`.** Phase 0 ran `migrate`,
+  which created Django's stock `auth_user` table. Phase 1 replaces it with
+  `accounts.User`, and Django refuses to swap `AUTH_USER_MODEL` once any
+  migration has been applied. The database holds no data, so wiping the volume
+  costs nothing — but skipping this step makes Phase 1 fail in a confusing way.
+- `[~] image vs container vs volume` — explained, not yet felt. The named
+  volumes `pgdata` / `mongodata` have not survived a `down` / `up` cycle yet.
+  The `down -v` above is the first time the distinction will bite.
+- `[~] project vs app` — explained, but no app exists yet. Phase 1 settles it.
 
-**Commit:** —
+**Commit:** `feat(phase-0): dockerised Django 6.1 + PostgreSQL 17 + MongoDB 8`
 
 ---
 
@@ -300,3 +309,5 @@ Curriculum: [`LEARNING-PLAN.md`](./LEARNING-PLAN.md)
 | Date | Phase | What happened |
 |---|---|---|
 | 2026-10-26 | — | Plan approved. `CLAUDE.md`, `LEARNING-PLAN.md`, `PROGRESS.md` created. |
+| 2026-10-27 | — | `ARCHITECTURE.md`, `BUSINESS-RULES.md`, `DATA-MODEL.md` written. |
+| 2026-10-29 | 0 | Docker environment built: `Dockerfile`, `docker-compose.yml`, `requirements.txt`, `.env`. `startproject config .` run, `settings.py` moved onto env vars + PostgreSQL. Three healthy containers, `migrate` green, welcome page served. |
